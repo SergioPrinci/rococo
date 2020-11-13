@@ -1,0 +1,8 @@
+<root ncards="0">
+  <card ID="cardid">
+    <name>cardname</name>
+    <series>seriesname</series>
+    <value>cardvalue</value>
+    <rarityweight>cardrarity</rarityweight>
+  </card>
+</root>
