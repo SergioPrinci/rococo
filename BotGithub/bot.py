@@ -11,7 +11,7 @@ from discord.ext import commands #class of discord.py
 from PIL import Image #image manipulation and creation
 
 '''declarations'''
-VERSION = "1.3.1" #version of the bot
+VERSION = "1.3.5" #version of the bot
 bot = commands.Bot(command_prefix='r') #command prefix and client object declaration
 answersdrop = [line.strip() for line in open("Sources\\dropanswers.txt", "r", newline="\n")] #add string/strings with what the bot needs to say on a drop
 factlist = [line.strip() for line in open("Sources\\facts.txt", "r", newline="\n")] #add string/strings for facts
