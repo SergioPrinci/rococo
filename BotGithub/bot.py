@@ -17,8 +17,8 @@ answersdrop = [line.strip() for line in open("Sources\\dropanswers.txt", "r", ne
 factlist = [line.strip() for line in open("Sources\\facts.txt", "r", newline="\n")] #add string/strings for facts
 log = open("log.txt", "w", buffering=1, newline="\n", encoding="utf-8") #opens the log file
 botdata = open("Sources\\botdata.txt", "r")
-password = botdata.readline().strip("password: ") #password for resets
-token = botdata.readline().strip("token: ") #discord bot token
+password = int(botdata.readline().strip("password:")) #password for resets
+token = botdata.readline().replace("token: ", "") #discord bot token
 GREY = (70, 70, 70) #color grey in RGB
 RED = (200, 100, 100) #color red in RGB
 intents = discord.Intents(messages=True, guilds=True, members=True)
@@ -30,17 +30,6 @@ if carddata is not None:
     cardrarity = [int(cards.rarityweight.cdata) for cards in carddata.root.card]
 
 '''events'''
-@bot.event
-async def on_guild_join(guild): #when the bot joins a new guild
-    global mainchannel
-    print("New guild joined! Guild name: " + guild.name)
-    log.write("New guild joined! Guild name: " + guild.name + "\n")
-    mainchannel = discord.utils.get(guild.text_channels, name="therococò")
-    if mainchannel is None:
-        channel = await guild.create_text_channel("therococò")
-        mainchannel = bot.get_channel(channel.id)
-        await mainchannel.send("Write 'rsetup' to finish the setup of the bot in this server")
-    
 @bot.event
 async def on_ready(): #when the bot connects to the server and it's ready
     global mainchannel
@@ -56,6 +45,17 @@ async def on_ready(): #when the bot connects to the server and it's ready
     log.flush()
 
 @bot.event
+async def on_guild_join(guild): #when the bot joins a new guild
+    global mainchannel
+    print("New guild joined! Guild name: " + guild.name)
+    log.write("New guild joined! Guild name: " + guild.name + "\n")
+    mainchannel = discord.utils.get(guild.text_channels, name="therococò")
+    if mainchannel is None:
+        channel = await guild.create_text_channel("therococò")
+        mainchannel = bot.get_channel(channel.id)
+        await mainchannel.send("Write 'rsetup' to finish the setup of the bot in this server")
+
+@bot.event
 async def on_error(event, *args, **kwargs):
     message = args[0].content
     log.write("=====================================================================================================\nON_ERROR LOGGING STARTS HERE\n")
@@ -63,9 +63,16 @@ async def on_error(event, *args, **kwargs):
     log.write(message + '\n')
     log.write(str(datetime.datetime.now()) + '\n')
     log.write('====================================================================================================')
+    log.flush()
 
 @bot.event
 async def on_command_error(ctx, error):
+    log.write("=====================================================================================================\nON_COMMAND_ERROR LOGGING STARTS HERE\n")
+    log.write(traceback.format_exc() + '\n')
+    log.write(str(error) + '\n')
+    log.write(str(datetime.datetime.now()) + '\n')
+    log.write('====================================================================================================')
+    log.flush()
     await help(ctx)
 
 @bot.event
@@ -85,6 +92,10 @@ async def on_voice_state_update(member, before, after): #when a member has his v
         await member.edit(reason="No more AFK", nick = member.display_name.rstrip("[AFK]"))
 
 '''commands'''
+@bot.command(aliases = ['coc'])
+async def cock(ctx):
+    await ctx.send("n i c e " + str(round(bot.latency, 2)*100) + "ms")
+
 @bot.command(aliases = ['firstsetup', 'fs'])
 async def setup(ctx):
     serverroot = ET.parse("Sources\\ServerDatabase.xml", ET.XMLParser(remove_blank_text=True)).getroot()
@@ -143,7 +154,7 @@ async def dropcard(ctx): #cards dropping
     for users in usersbranch.findall("user"):
         if users.attrib["ID"] == str(ctx.author.id):
             foundFlag = True
-            if time.time()-int(users.find("lastdrop").text) > 600:
+            if time.time()-int(users.find("lastdrop").text) > 300:
                 dropFlag = True
     if not foundFlag:
         dropFlag = True
@@ -301,7 +312,7 @@ async def collection(ctx, mention: discord.Member=None): #outputs the list of ca
     log.flush()
 
 @bot.command(aliases = ['clearchat', 'cl'])
-async def clear(ctx, amount: int =5): #command to clear the chat by amount
+async def clear(ctx, amount: int = 5): #command to clear the chat by amount
     serverroot = ET.parse("Sources\\ServerDatabase.xml", ET.XMLParser(remove_blank_text=True)).getroot()
     serverbranch = serverroot.find("servers")
     start = time.time()
@@ -333,38 +344,32 @@ async def help(ctx): #command for help
 
 @bot.command(aliases = ['stop', 'shutdown'])
 async def maintenance(ctx, passwordinput: str):
-    serverroot = ET.parse("Sources\\ServerDatabase.xml", ET.XMLParser(remove_blank_text=True)).getroot()
-    serverbranch = serverroot.find("servers")
     await ctx.channel.purge(limit=1)
-    rolelist = [int(server.find("adminroleid").text) for server in serverbranch.findall("server")]
-    if passwordinput == password and ctx.author.top_role.id in rolelist:
-        for guild in bot.guilds:
-            await discord.utils.get(guild.text_challenge, name="therococò").send("The bot is stopping.")
+    if int(passwordinput) == password and ctx.author.id == 498096332955844619:
+        await ctx.send("The bot is stopping.")
         print(str(ctx.author) + " has shutdown the bot from the server " + ctx.guild.name)
         log.write(str(ctx.author) + " has shutdown the bot from the server " + ctx.guild.name + "\n")
+        log.write("Goodnight :D")
+        time.sleep(5)
         exit()
     else: 
-        print(str(ctx.author) + " has shutdown the bot from the server " + ctx.guild.name)
-        log.write(str(ctx.author) + " has shutdown the bot from the server " + ctx.guild.name + "\n")
+        print(str(ctx.author) + " has tried to shutdown the bot from the server " + ctx.guild.name + " with the ID being " + str(ctx.author.id))
+        log.write(str(ctx.author) + " has tried to shutdown the bot from the server " + ctx.guild.name + " with the ID being " + str(ctx.author.id) + "\n")
     log.flush()
 
 @bot.command(aliases = ['reboot'])
 async def restart(ctx, passwordinput: str):
-    serverroot = ET.parse("Sources\\ServerDatabase.xml", ET.XMLParser(remove_blank_text=True)).getroot()
-    serverbranch = serverroot.find("servers")
     await ctx.channel.purge(limit=1)
-    rolelist = [int(server.find("adminroleid").text) for server in serverbranch.findall("server")]
-    if passwordinput == password and ctx.author.top_role.id in rolelist:
-        for guild in bot.guilds:
-            await discord.utils.get(guild.text_channel, name="therococò").send("The bot is rebooting, wait some seconds...")
+    if int(passwordinput) == password and ctx.author.id == 498096332955844619:
+        await ctx.send("The bot is rebooting, wait some seconds...")
         print(str(ctx.author) + " has rebooted the bot from the server " + ctx.guild.name)
         log.write(str(ctx.author) + " has rebooted the bot from the server " + ctx.guild.name)
         print("Rebooting...")
         os.system("bot.py")
         exit()
     else:
-        print(str(ctx.author) + " has tried to reboot the bot from the server " + ctx.guild.name)
-        log.write(str(ctx.author) + " has tried to reboot the bot from the server " + ctx.guild.name + "\n")
+        print(str(ctx.author) + " has tried to reboot the bot from the server " + ctx.guild.name + " with the ID being " + str(ctx.author.id))
+        log.write(str(ctx.author) + " has tried to reboot the bot from the server " + ctx.guild.name + " with the ID being " + str(ctx.author.id) + "\n")
     log.flush()
 
 @bot.command()
