@@ -3,3 +3,4 @@ token:
 adminid: 
 prefix:
 cardgame:
+botname: 
