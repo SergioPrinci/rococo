@@ -1,4 +1,5 @@
 import asyncio
+from distutils import util
 import traceback #logging
 import lxml.etree as ET #writing xml user database
 import untangle #xml database
@@ -20,7 +21,7 @@ password: int = int(botdata.readline().replace("password: ", "")) #password for 
 token: str = botdata.readline().replace("token: ", "").strip("\n") #discord bot token
 botadminid: int = int(botdata.readline().replace("adminid: ", "")) #bot manager
 prefix: str = botdata.readline().replace("prefix: ", "").strip("\n") #bot manager
-cardgame: bool = bool(botdata.readline().replace("cardgame: ", "")) #card games flag
+cardgame: bool = bool(util.strtobool(botdata.readline().replace("cardgame: ", "").strip("\n"))) #card games flag
 botname: str = botdata.readline().replace("botname: ", "").strip("\n") #the bot name
 def printproperties():
     print("Properties of botdata.txt")
@@ -127,7 +128,6 @@ async def setup(ctx, mention: discord.Role):
     if foundFlag and setupFlag:
         await ctx.send("This server has already been setup.")
     else:
-        await ctx.send("Now mention the lowest role that can have access to functions like clear: ")
         newserverbranch = ET.Element("server")
         newserverbranch.attrib["ID"] = str(ctx.guild.id)
         newservername = ET.SubElement(newserverbranch, "name")
