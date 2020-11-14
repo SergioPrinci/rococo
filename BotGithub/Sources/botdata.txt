@@ -1,3 +1,5 @@
 password: 
 token: 
 adminid: 
+prefix:
+cardgame:
