@@ -15,12 +15,22 @@ VERSION = "1.3.5" #version of the bot
 answersdrop = [line.strip() for line in open("Sources\\dropanswers.txt", "r", newline="\n")] #add string/strings with what the bot needs to say on a drop
 factlist = [line.strip() for line in open("Sources\\facts.txt", "r", newline="\n")] #add string/strings for facts
 log = open("log.txt", "w", buffering=1, newline="\n", encoding="utf-8") #opens the log file
-botdata = open("Sources\\botdata.txt", "r") #opens file with token, password and the id of the manager of the bot
+botdata = open("Sources\\botdata.txt", "r", encoding="utf-8") #opens file with token, password and the id of the manager of the bot
 password: int = int(botdata.readline().replace("password: ", "")) #password for resets
-token: str = botdata.readline().replace("token: ", "") #discord bot token
+token: str = botdata.readline().replace("token: ", "").strip("\n") #discord bot token
 botadminid: int = int(botdata.readline().replace("adminid: ", "")) #bot manager
-prefix: str = str(botdata.readline().replace("prefix: ", "")) #bot manager
-cardgame: bool = bool(botdata.readline().replace("cardgame: ", ""))
+prefix: str = botdata.readline().replace("prefix: ", "").strip("\n") #bot manager
+cardgame: bool = bool(botdata.readline().replace("cardgame: ", "")) #card games flag
+botname: str = botdata.readline().replace("botname: ", "").strip("\n") #the bot name
+def printproperties():
+    print("Properties of botdata.txt")
+    print("Password: " + str(password))
+    print("Bot token: " + token)
+    print("Bot Admin ID: " + str(botadminid))
+    print("Prefix: " + prefix)
+    print("Cardgame Flag: " + str(cardgame))
+    print("Bot name: " + botname)
+printproperties()
 GREY = (70, 70, 70) #color grey in RGB
 RED = (200, 100, 100) #color red in RGB
 intents = discord.Intents(messages=True, guilds=True, members=True)
@@ -40,11 +50,11 @@ async def on_ready(): #when the bot connects to the server and it's ready
     os.system("cls")
     print('Connected as ' + str(bot.user) + ' in ' + str(len(bot.guilds)) + ' servers||||' + 'VERSION ' + VERSION)
     for guild in bot.guilds:
-        mainchannel = discord.utils.get(guild.text_channels, name="therococò")
+        mainchannel = discord.utils.get(guild.text_channels, name=botname)
         if mainchannel is None:
-            channel = await guild.create_text_channel("therococò")
+            channel = await guild.create_text_channel(botname)
             mainchannel = bot.get_channel(channel.id)
-        await mainchannel.send("**Rococò is online!**")
+        await mainchannel.send("**" + botname + "(rococò engine) is online!**")
     log.write("Bot started at " + str(datetime.datetime.now()) + "\n")
     log.flush()
 
@@ -53,9 +63,9 @@ async def on_guild_join(guild): #when the bot joins a new guild
     global mainchannel
     print("New guild joined! Guild name: " + guild.name)
     log.write("New guild joined! Guild name: " + guild.name + "\n")
-    mainchannel = discord.utils.get(guild.text_channels, name="therococò")
+    mainchannel = discord.utils.get(guild.text_channels, name=botname)
     if mainchannel is None:
-        channel = await guild.create_text_channel("therococò")
+        channel = await guild.create_text_channel(botname)
         mainchannel = bot.get_channel(channel.id)
         await mainchannel.send("Write '" + prefix + "setup' with the mention of the lowest mod role to finish the setup of the bot in this server")
 
