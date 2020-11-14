@@ -38,17 +38,12 @@ intents = discord.Intents(messages=True, guilds=True, members=True)
 bot = commands.Bot(command_prefix=prefix) #command prefix and client object declaration
 bot.remove_command('help')
 
-'''XML Parsing'''
-if cardgame:
-    carddata = untangle.parse("Sources\\CardDatabase.xml")
-    if carddata is not None:
-        cardrarity = [int(cards.rarityweight.cdata) for cards in carddata.root.card]
-
 '''events'''
 @bot.event
 async def on_ready(): #when the bot connects to the server and it's ready
     global mainchannel
     os.system("cls")
+    await bot.user.edit(username=botname)
     print('Connected as ' + str(bot.user) + ' in ' + str(len(bot.guilds)) + ' servers||||' + 'VERSION ' + VERSION)
     for guild in bot.guilds:
         mainchannel = discord.utils.get(guild.text_channels, name=botname)
@@ -72,21 +67,20 @@ async def on_guild_join(guild): #when the bot joins a new guild
 
 @bot.event
 async def on_error(event, *args, **kwargs):
-    message = args[0].content
+    message = args[0]
     log.write("=====================================================================================================\nON_ERROR LOGGING STARTS HERE\n")
-    log.write(traceback.format_exc() + '\n')
-    log.write(message + '\n')
+    log.write(traceback.format_exc())
+    log.write(str(message) + '\n')
     log.write(str(datetime.datetime.now()) + '\n')
-    log.write('====================================================================================================')
+    log.write('====================================================================================================\n')
     log.flush()
 
 @bot.event
 async def on_command_error(ctx, error):
     log.write("=====================================================================================================\nON_COMMAND_ERROR LOGGING STARTS HERE\n")
-    log.write(traceback.format_exc() + '\n')
-    log.write(str(error) + '\n')
+    log.write(ctx.message.content + " " + str(error) + '\n')
     log.write(str(datetime.datetime.now()) + '\n')
-    log.write('====================================================================================================')
+    log.write('====================================================================================================\n')
     log.flush()
     await help(ctx)
 
@@ -149,8 +143,8 @@ async def setup(ctx, mention: discord.Role):
     log.write('Used successfully the command setup from "' + str(ctx.author) + '"(' + ctx.author.top_role.name + '), in the server ' + ctx.guild.name + ' in ' + str(round(time.time()-start, 2)) + ' seconds.\n')
     log.flush()
 
-@bot.command(aliases = ['facts', 'fact']) 
-async def spittingfacts(ctx):
+@bot.command(aliases = ['f', 'fact']) 
+async def facts(ctx):
     start = time.time()
     if factlist: await ctx.send(random.choice(factlist))
     else: await ctx.send("No facts found! Tell the admin to put facts in the bot!")
@@ -161,6 +155,8 @@ async def spittingfacts(ctx):
 @bot.command(aliases = ['D', 'd', 'drop'])
 async def dropcard(ctx): #cards dropping
     if cardgame: 
+        carddata = untangle.parse("Sources\\CardDatabase.xml")
+        if carddata is not None: cardrarity = [int(cards.rarityweight.cdata) for cards in carddata.root.card]
         dropFlag = False
         foundFlag = False
         start = time.time() #starting timer
@@ -176,7 +172,7 @@ async def dropcard(ctx): #cards dropping
             dropFlag = True
         
         if dropFlag:
-            imagetodrop = imagecreation(3, GREY, "Temp\\temp.png") #list of paths of images dropped for parsing database info
+            imagetodrop = imagecreation(3, GREY, "Temp\\temp.png", cardrarity) #list of paths of images dropped for parsing database info
 
             cardsdropped=[0, 0, 0] #string parsing
             for i in range(len(imagetodrop)):
@@ -244,13 +240,15 @@ async def dropcard(ctx): #cards dropping
 async def playgame(ctx, versus: discord.Member, turni: int=1): #playing the cards, default turns is 1
     if cardgame:
         start = time.time() #same timer to measure performance
+        carddata = untangle.parse("Sources\\CardDatabase.xml")
+        if carddata is not None: cardrarity = [int(cards.rarityweight.cdata) for cards in carddata.root.card]
         if turni == 1: #only one turn
             os.chdir("Images") #changing directory for image search
             firstplayer = ctx.author.mention #memorizing the first player who sent the message
             secondplayer = versus #memorizing the mention of the second player
             imagelist = os.listdir() #creating an array for the paths of the images
 
-            cardtoplay = random.choice(imagelist) #gets random photos paths
+            cardtoplay = random.choice(imagelist) #gets random photo paths
             cardplayed = cardtoplay.replace('.png', '') #string parsing
             value1 = int(carddata.root.card[int(cardplayed)].value.cdata) #takes the value from the xml file
             await ctx.send(file=discord.File(cardtoplay), content=firstplayer + ' ,you played a card with value '+ str(value1)) #message with card and the value of it
@@ -272,8 +270,8 @@ async def playgame(ctx, versus: discord.Member, turni: int=1): #playing the card
                 await ctx.send('WTF just happened.')
         
         elif turni > 1 and turni < 6: #if the round quantity is over 1, this happens
-            cardstoplay1 = imagecreation(turni, RED, "Temp\\temp1.png")
-            cardstoplay2 = imagecreation(turni, RED, "Temp\\temp2.png")
+            cardstoplay1 = imagecreation(turni, RED, "Temp\\temp1.png", cardrarity)
+            cardstoplay2 = imagecreation(turni, RED, "Temp\\temp2.png", cardrarity)
             
             value1 = value2 = 0
 
@@ -311,6 +309,7 @@ async def collection(ctx, mention: discord.Member=None): #outputs the list of ca
     if cardgame:
         start = time.time()
         userdata = untangle.parse("Sources\\UsersDatabase.xml")
+        carddata = untangle.parse("Sources\\CardDatabase.xml")
         useridlist = [elements["ID"] for elements in userdata.root.users.user]
         if mention is not None and str(mention.id) not in useridlist:
             await ctx.send("The user never took a card from the bot!")
@@ -318,16 +317,21 @@ async def collection(ctx, mention: discord.Member=None): #outputs the list of ca
             for users in userdata.root.users.user:
                 if mention is None:
                     if users["ID"] == str(ctx.author.id):
-                        tempcardlist = str(users.cardlist.cdata)
+                        strcardlist = str(users.cardlist.cdata)
+                        title = ctx.author.name + "'s collection"
                 else:
                     if users["ID"] == str(mention.id):
-                        tempcardlist = str(users.cardlist.cdata)
+                        strcardlist = str(users.cardlist.cdata)
+                        title = mention.name + "'s collection"
             
-            cardlist = tempcardlist.split(",")
-            embed = discord.Embed(title=ctx.author.name + "'s collection")
+            tempcardlist = set(map(int, strcardlist.split(",")))
+            cardlist = sorted(tempcardlist)
+            if len(cardlist) == int(carddata.root["ncards"]):
+                title = "⭐" + title + "⭐"
+            embed = discord.Embed(title=title)
             embed.add_field(name="Number of cards", value="```You have " + str(len(cardlist)) + " cards in your collection.```", inline=False)
             for cardid in cardlist:
-                embed.add_field(name="Card", value=str(carddata.root.card[int(cardid)-1].name.cdata), inline=True)
+                embed.add_field(name="\u200b", value="Card ID: " + str(cardid) + "\t" + str(carddata.root.card[int(cardid)-1].name.cdata), inline=False)
             await ctx.send(embed=embed)
         print('Used successfully the command collection from "' + str(ctx.author) + '"(' + ctx.author.top_role.name + '), in the server ' + ctx.guild.name + ' in ' + str(round(time.time()-start, 2)) + ' seconds.')
         log.write('Used successfully the command collection from "' + str(ctx.author) + '"(' + ctx.author.top_role.name + '), in the server ' + ctx.guild.name + ' in ' + str(round(time.time()-start, 2)) + ' seconds.\n')
@@ -397,14 +401,21 @@ async def restart(ctx, passwordinput: str):
     log.flush()
 
 @bot.command()
-async def afk(ctx):
-    await ctx.send(ctx.author.nick + " has gone AFK")
-    await ctx.author.move_to(bot.get_channel(ctx.guild.afk_channel.id))
-    print(str(ctx.author) + " has gone AFK in the server " + ctx.guild.name)
-    log.write(str(ctx.author) + "  in the server " + ctx.guild.name + "\n")
-    log.flush()
+async def afk(ctx, mention: discord.Member=None):
+    if mention is None:
+        await ctx.send(ctx.author.nick + " has gone AFK")
+        await ctx.author.move_to(bot.get_channel(ctx.guild.afk_channel.id))
+        print(str(ctx.author) + " has gone AFK in the server " + ctx.guild.name)
+        log.write(str(ctx.author) + "  in the server " + ctx.guild.name + "\n")
+        log.flush()
+    else:
+        await ctx.send(mention.nick + " has gone AFK")
+        await mention.move_to(bot.get_channel(ctx.guild.afk_channel.id))
+        print(str(mention) + " has gone AFK in the server " + ctx.guild.name)
+        log.write(str(mention) + " has gone AFK in the server " + ctx.guild.name + "\n")
+        log.flush()
 
-def imagecreation(nphotos: int, color: tuple, savename: str): #function to create an image
+def imagecreation(nphotos: int, color: tuple, savename: str, cardrarity: list): #function to create an image
     os.chdir("Images")
     imagelist = os.listdir()
     imagetodrop = random.choices(imagelist, weights=cardrarity, k=nphotos)
