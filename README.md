@@ -8,7 +8,7 @@ Setup is pretty simple:
 
 -Install with pip the modules lxml, untangle, discord and pillow
 
--Go to sources and write into botdata.txt token(the bot one), password(must be a number), and member ID(with developer mode).
+-Go to sources and write into botdata.txt token(the bot one), password(must be a number), member ID(with developer mode), prefix, cardgame(it's a bool so True or False with T/F capital), botname.
 
 -Add facts, personalized answers to drops or cards with the card creator!
 
