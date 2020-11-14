@@ -12,7 +12,7 @@ from discord.ext import commands #class of discord.py
 from PIL import Image #image manipulation and creation
 
 '''declarations'''
-VERSION = "1.3.5" #version of the bot
+VERSION = "1.4" #version of the bot
 answersdrop = [line.strip() for line in open("Sources\\dropanswers.txt", "r", newline="\n")] #add string/strings with what the bot needs to say on a drop
 factlist = [line.strip() for line in open("Sources\\facts.txt", "r", newline="\n")] #add string/strings for facts
 log = open("log.txt", "w", buffering=1, newline="\n", encoding="utf-8") #opens the log file
