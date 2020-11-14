@@ -54,7 +54,7 @@ async def on_guild_join(guild): #when the bot joins a new guild
     if mainchannel is None:
         channel = await guild.create_text_channel("therococò")
         mainchannel = bot.get_channel(channel.id)
-        await mainchannel.send("Write 'rsetup' to finish the setup of the bot in this server")
+        await mainchannel.send("Write 'rsetup' with the mention of the lowest mod role to finish the setup of the bot in this server")
 
 @bot.event
 async def on_error(event, *args, **kwargs):
@@ -98,7 +98,7 @@ async def cock(ctx):
     await ctx.send("n i c e " + str(round(bot.latency, 2)*100) + "ms")
 
 @bot.command(aliases = ['firstsetup', 'fs'])
-async def setup(ctx):
+async def setup(ctx, mention: discord.Role):
     serverroot = ET.parse("Sources\\ServerDatabase.xml", ET.XMLParser(remove_blank_text=True)).getroot()
     serverbranch = serverroot.find("servers")
     start = time.time()
@@ -114,6 +114,7 @@ async def setup(ctx):
     if foundFlag and setupFlag:
         await ctx.send("This server has already been setup.")
     else:
+        await ctx.send("Now mention the lowest role that can have access to functions like clear: ")
         newserverbranch = ET.Element("server")
         newserverbranch.attrib["ID"] = str(ctx.guild.id)
         newservername = ET.SubElement(newserverbranch, "name")
@@ -125,7 +126,7 @@ async def setup(ctx):
         newservermainchannelid = ET.SubElement(newserverbranch, "mainchannelid")
         newservermainchannelid.text = str(mainchannel.id)
         newserveradminroleid = ET.SubElement(newserverbranch, "adminroleid")
-        newserveradminroleid.text = str(ctx.author.top_role.id)
+        newserveradminroleid.text = str(mention.id)
         serverbranch.append(newserverbranch)
         newroot = ET.tostring(serverroot, encoding="UTF-8", pretty_print=True)
         open("Sources\\ServerDatabase.xml", "wb").write(newroot)
