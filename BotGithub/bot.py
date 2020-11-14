@@ -16,9 +16,10 @@ bot = commands.Bot(command_prefix='r') #command prefix and client object declara
 answersdrop = [line.strip() for line in open("Sources\\dropanswers.txt", "r", newline="\n")] #add string/strings with what the bot needs to say on a drop
 factlist = [line.strip() for line in open("Sources\\facts.txt", "r", newline="\n")] #add string/strings for facts
 log = open("log.txt", "w", buffering=1, newline="\n", encoding="utf-8") #opens the log file
-botdata = open("Sources\\botdata.txt", "r")
-password = int(botdata.readline().strip("password:")) #password for resets
+botdata = open("Sources\\botdata.txt", "r") #opens file with token, password and the id of the manager of the bot
+password = int(botdata.readline().replace("password: ", "")) #password for resets
 token = botdata.readline().replace("token: ", "") #discord bot token
+botadminid = int(botdata.readline().replace("adminid: ", "")) #bot manager
 GREY = (70, 70, 70) #color grey in RGB
 RED = (200, 100, 100) #color red in RGB
 intents = discord.Intents(messages=True, guilds=True, members=True)
@@ -345,7 +346,7 @@ async def help(ctx): #command for help
 @bot.command(aliases = ['stop', 'shutdown'])
 async def maintenance(ctx, passwordinput: str):
     await ctx.channel.purge(limit=1)
-    if int(passwordinput) == password and ctx.author.id == 498096332955844619:
+    if int(passwordinput) == password and ctx.author.id == botadminid:
         await ctx.send("The bot is stopping.")
         print(str(ctx.author) + " has shutdown the bot from the server " + ctx.guild.name)
         log.write(str(ctx.author) + " has shutdown the bot from the server " + ctx.guild.name + "\n")
@@ -360,7 +361,7 @@ async def maintenance(ctx, passwordinput: str):
 @bot.command(aliases = ['reboot'])
 async def restart(ctx, passwordinput: str):
     await ctx.channel.purge(limit=1)
-    if int(passwordinput) == password and ctx.author.id == 498096332955844619:
+    if int(passwordinput) == password and ctx.author.id == botadminid:
         await ctx.send("The bot is rebooting, wait some seconds...")
         print(str(ctx.author) + " has rebooted the bot from the server " + ctx.guild.name)
         log.write(str(ctx.author) + " has rebooted the bot from the server " + ctx.guild.name)
