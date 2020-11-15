@@ -1,5 +1,3 @@
-import asyncio
-from distutils import util
 import traceback #logging
 import lxml.etree as ET #writing xml user database
 import untangle #xml database
@@ -7,12 +5,13 @@ import os #local machine functions
 import time #timer
 import discord #main library
 import random #random functions
-import datetime
+import datetime #logging
+from distutils import util #transforming string in bool
 from discord.ext import commands #class of discord.py
 from PIL import Image #image manipulation and creation
 
 '''declarations'''
-VERSION = "1.4" #version of the bot
+VERSION = "1,6" #version of the bot
 answersdrop = [line.strip() for line in open("Sources\\dropanswers.txt", "r", newline="\n")] #add string/strings with what the bot needs to say on a drop
 factlist = [line.strip() for line in open("Sources\\facts.txt", "r", newline="\n")] #add string/strings for facts
 log = open("log.txt", "w", buffering=1, newline="\n", encoding="utf-8") #opens the log file
@@ -23,28 +22,24 @@ botadminid: int = int(botdata.readline().replace("adminid: ", "")) #bot manager
 prefix: str = botdata.readline().replace("prefix: ", "").strip("\n") #bot manager
 cardgame: bool = bool(util.strtobool(botdata.readline().replace("cardgame: ", "").strip("\n"))) #card games flag
 botname: str = botdata.readline().replace("botname: ", "").strip("\n") #the bot name
-def printproperties():
-    print("Properties of botdata.txt")
-    print("Password: " + str(password))
-    print("Bot token: " + token)
-    print("Bot Admin ID: " + str(botadminid))
-    print("Prefix: " + prefix)
-    print("Cardgame Flag: " + str(cardgame))
-    print("Bot name: " + botname)
-printproperties()
+extension: bool = bool(util.strtobool(botdata.readline().replace("extension: ", "").strip("\n"))) #extension flag
+updates: bool = bool(util.strtobool(botdata.readline().replace("updates: ", "").strip("\n"))) #updates flag
+bot = commands.Bot(command_prefix=prefix) #command prefix and client object declaration
+bot.remove_command('help')
 GREY = (70, 70, 70) #color grey in RGB
 RED = (200, 100, 100) #color red in RGB
 intents = discord.Intents(messages=True, guilds=True, members=True)
-bot = commands.Bot(command_prefix=prefix) #command prefix and client object declaration
-bot.remove_command('help')
 
 '''events'''
 @bot.event
 async def on_ready(): #when the bot connects to the server and it's ready
     global mainchannel
-    os.system("cls")
     await bot.user.edit(username=botname)
-    print('Connected as ' + str(bot.user) + ' in ' + str(len(bot.guilds)) + ' servers||||' + 'VERSION ' + VERSION)
+    os.system("cls")
+    printproperties()
+    if extension:
+        loadextension("extension")
+    print('\nConnected as ' + str(bot.user) + ' in ' + str(len(bot.guilds)) + ' servers (' + 'VERSION ' + VERSION + ')')
     for guild in bot.guilds:
         mainchannel = discord.utils.get(guild.text_channels, name=botname)
         if mainchannel is None:
@@ -68,19 +63,19 @@ async def on_guild_join(guild): #when the bot joins a new guild
 @bot.event
 async def on_error(event, *args, **kwargs):
     message = args[0]
-    log.write("=====================================================================================================\nON_ERROR LOGGING STARTS HERE\n")
+    log.write("\n=====================================================================================================\nON_ERROR LOGGING STARTS HERE\n")
     log.write(traceback.format_exc())
     log.write(str(message) + '\n')
     log.write(str(datetime.datetime.now()) + '\n')
-    log.write('====================================================================================================\n')
+    log.write('====================================================================================================\n\n')
     log.flush()
 
 @bot.event
 async def on_command_error(ctx, error):
-    log.write("=====================================================================================================\nON_COMMAND_ERROR LOGGING STARTS HERE\n")
+    log.write("\n=====================================================================================================\nON_COMMAND_ERROR LOGGING STARTS HERE\n")
     log.write(ctx.message.content + " " + str(error) + '\n')
     log.write(str(datetime.datetime.now()) + '\n')
-    log.write('====================================================================================================\n')
+    log.write('====================================================================================================\n\n')
     log.flush()
     await help(ctx)
 
@@ -183,7 +178,14 @@ async def dropcard(ctx): #cards dropping
             await drop.add_reaction('2️⃣')
             await drop.add_reaction('3️⃣')
 
-            fracture = time.time() #now the time that takes the machine to do the work is partially finished, we don't want to measure the time that the user needs to select a card
+            for users in usersbranch.findall("user"):
+                if users.attrib["ID"] == str(ctx.author.id):
+                    users.find("lastdrop").text = str(round(time.time()))
+                    newroot = ET.tostring(root, encoding="UTF-8", pretty_print=True)
+                    open("Sources\\UsersDatabase.xml", "wb").write(newroot)
+
+            print('Used successfully the command drop from "' + str(ctx.author) + '"(' + ctx.author.top_role.name + '), in the server ' + ctx.guild.name + ' in ' + str(round(time.time()-start, 2)) + ' seconds.') #console log
+            log.write('Used successfully the command drop from "' + str(ctx.author) + '"(' + ctx.author.top_role.name + '), in the server ' + ctx.guild.name + ' in ' + str(round(time.time()-start, 2)) + ' seconds.\n')
             
             def checkreactions(reaction, user): #function to get the reaction used and the user who used it 
                 if (user == ctx.message.author and str(reaction.emoji) == '1️⃣'): return user
@@ -191,8 +193,7 @@ async def dropcard(ctx): #cards dropping
                 elif (user == ctx.message.author and str(reaction.emoji) == '3️⃣'): return user
 
             reaction, user = await bot.wait_for('reaction_add',check=checkreactions) #using the function to check on the reactions under drop message
-            
-            fracturestart = time.time() #another timer for another piece of code
+
             if str(reaction) == '1️⃣': #determining which card the user has chosen to pick
                 await drop.edit(content="*" + drop.content + "*" + " **\nThese cards are no more available**")
                 await ctx.send(user.mention + " took the card " + carddata.root.card[int(cardsdropped[0])-1].name.cdata)
@@ -226,8 +227,6 @@ async def dropcard(ctx): #cards dropping
                 usersbranch.append(newuserbranch)
             newroot = ET.tostring(root, encoding="UTF-8", pretty_print=True)
             open("Sources\\UsersDatabase.xml", "wb").write(newroot)
-            print('Used successfully the command drop from "' + str(ctx.author) + '"(' + ctx.author.top_role.name + '), in the server ' + ctx.guild.name + ' in ' + str(round((fracture-start)+(time.time()-fracturestart), 2)) + ' seconds.') #console log
-            log.write('Used successfully the command drop from "' + str(ctx.author) + '"(' + ctx.author.top_role.name + '), in the server ' + ctx.guild.name + ' in ' + str(round((fracture-start)+(time.time()-fracturestart), 2)) + ' seconds.\n')
         else:
             await ctx.send("You got to wait 5 minutes between drops!")
             print('Used successfully the command drop from "' + str(ctx.author) + '"(' + ctx.author.top_role.name + '), in the server ' + ctx.guild.name + ' in ' + str(round(time.time()-start, 2)) + ' seconds.') #console log
@@ -235,6 +234,26 @@ async def dropcard(ctx): #cards dropping
         log.flush()
     else:
         await ctx.send("Tell the bot admin to add the function by botdata.txt!")
+
+@bot.command(aliases = ['cd'])
+async def cooldown(ctx):
+    start = time.time()
+    if cardgame:
+        userdata = untangle.parse("Sources\\UsersDatabase.xml")
+        useridlist = [int(elements["ID"]) for elements in userdata.root.users.user]
+        if ctx.author.id in useridlist:
+            for users in userdata.root.users.user:
+                if users["ID"] == str(ctx.author.id):
+                    if 300-(time.time()-int(users.lastdrop.cdata)) < 0:
+                        await ctx.send(ctx.author.mention + ", you can drop some cards!")
+                    else:
+                        await ctx.send(ctx.author.mention + ", you have " + str(int(300-(time.time()-int(users.lastdrop.cdata)))) + " seconds of cooldown.")
+        else: 
+            await ctx.send(ctx.author.mention + ", you can drop your first cards now!")
+    else:
+        await ctx.send("Tell the bot admin to add the function by botdata.txt!")
+    print('Used successfully the command cooldown from "' + str(ctx.author) + '"(' + ctx.author.top_role.name + '), in the server ' + ctx.guild.name + ' in ' + str(round(time.time()-start, 2)) + ' seconds.') #console log
+    log.write('Used successfully the command cooldown from "' + str(ctx.author) + '"(' + ctx.author.top_role.name + '), in the server ' + ctx.guild.name + ' in ' + str(round(time.time()-start, 2)) + ' seconds.\n')
 
 @bot.command(aliases = ['play', 'p', 'P'])
 async def playgame(ctx, versus: discord.Member, turni: int=1): #playing the cards, default turns is 1
@@ -331,7 +350,7 @@ async def collection(ctx, mention: discord.Member=None): #outputs the list of ca
             embed = discord.Embed(title=title)
             embed.add_field(name="Number of cards", value="```You have " + str(len(cardlist)) + " cards in your collection.```", inline=False)
             for cardid in cardlist:
-                embed.add_field(name="\u200b", value="Card ID: " + str(cardid) + "\t" + str(carddata.root.card[int(cardid)-1].name.cdata), inline=False)
+                embed.add_field(name="Card ID: " + str(cardid) + "\t", value=str(carddata.root.card[int(cardid)-1].name.cdata), inline=True)
             await ctx.send(embed=embed)
         print('Used successfully the command collection from "' + str(ctx.author) + '"(' + ctx.author.top_role.name + '), in the server ' + ctx.guild.name + ' in ' + str(round(time.time()-start, 2)) + ' seconds.')
         log.write('Used successfully the command collection from "' + str(ctx.author) + '"(' + ctx.author.top_role.name + '), in the server ' + ctx.guild.name + ' in ' + str(round(time.time()-start, 2)) + ' seconds.\n')
@@ -355,17 +374,19 @@ async def clear(ctx, amount: int = 5): #command to clear the chat by amount
 async def help(ctx): #command for help
     start = time.time()
     embed = discord.Embed(title="Commands")
-    embed.add_field(name= prefix + "setup", value="Starts the setup for the essentials functions of the bot -Syntax: " + prefix + "setup", inline=False)
-    embed.add_field(name= prefix + "drop(alias rd)", value="Drops 3 casual cards -Syntax: " + prefix + "drop", inline=False)
-    embed.add_field(name= prefix + "play(alias rp)", value="Card game based on cards value -Syntax: " + prefix + "play mention rounds(default 1, max 5)", inline=False)
-    embed.add_field(name= prefix + "clear(alias rc)", value="Clears the chat by n times -Syntax: " + prefix + "clear numberofmessages(default 5)", inline=False)
-    embed.add_field(name= prefix + "help(alias rh)", value="Shows this page -Syntax: " + prefix + "help", inline=False)
-    embed.add_field(name= prefix + "collection(alias rcol)", value="Outputs the card possessed by the user -Syntax: " + prefix + "collection mention", inline=False)
-    embed.add_field(name= prefix + "facts(alias rf)", value="Outputs a random fact -Syntax: " + prefix + "facts", inline=False)
-    embed.add_field(name= prefix + "maintenance(alias rstop)", value="Stops the bot -Syntax: " + prefix + "stop password", inline=False)
-    embed.add_field(name= prefix + "restart(alias rreboot)", value="Reboot the drop(helpful for code editing) -Syntax: " + prefix + "restart password", inline=False)
-    embed.add_field(name= prefix + "afk", value="Send the user who called the command in the AFK channel -Syntax: " + prefix + "afk", inline=False)
-    await ctx.send(embed=embed)
+    embed.add_field(name = prefix + "setup", value="Starts the setup for the essentials functions of the bot -Syntax: " + prefix + "setup", inline=False)
+    embed.add_field(name = prefix + "drop(alias "+ prefix + "d)", value="Drops 3 casual cards -Syntax: " + prefix + "drop", inline=False)
+    embed.add_field(name = prefix + "play(alias "+ prefix + "p)", value="Card game based on cards value -Syntax: " + prefix + "play mention rounds(default 1, max 5)", inline=False)
+    embed.add_field(name = prefix + "clear(alias "+ prefix + "c)", value="Clears the chat by n times -Syntax: " + prefix + "clear numberofmessages(default 5)", inline=False)
+    embed.add_field(name = prefix + "help(alias "+ prefix + "h)", value="Shows this page -Syntax: " + prefix + "help", inline=False)
+    embed.add_field(name = prefix + "collection(alias "+ prefix + "col)", value="Outputs the card possessed by the user -Syntax: " + prefix + "collection mention", inline=False)
+    embed.add_field(name = prefix + "facts(alias "+ prefix + "f)", value="Outputs a random fact -Syntax: " + prefix + "facts", inline=False)
+    embed.add_field(name = prefix + "maintenance(alias "+ prefix + "stop)", value="Stops the bot -Syntax: " + prefix + "stop password", inline=False)
+    embed.add_field(name = prefix + "restart(alias "+ prefix + "reboot)", value="Reboot the drop(helpful for code editing) -Syntax: " + prefix + "restart password", inline=False)
+    embed.add_field(name = prefix + "afk", value="Send the user who called the command in the AFK channel -Syntax: " + prefix + "afk", inline=False)
+    embed.add_field(name = prefix + "cooldown (alias " + prefix + "cd)", value="Tells how much time of cooldown is left to drop other cards -Syntax: " + prefix + "cooldown", inline=False)
+    embed.add_field(name = prefix + "cock", value="Just, tells you the ping of the bot. Nothing else. -Syntax: " + prefix + "cock", inline=False)
+    await ctx.send(embed = embed)
     print('Used successfully the command help from "' + str(ctx.author) + '"(' + ctx.author.top_role.name + '), in the server ' + ctx.guild.name + ' in ' + str(round(time.time()-start, 2)) + ' seconds.')
     log.write('Used successfully the command help from "' + str(ctx.author) + '"(' + ctx.author.top_role.name + '), in the server ' + ctx.guild.name + ' in ' + str(round(time.time()-start, 2)) + ' seconds.\n')
     log.flush()
@@ -403,21 +424,17 @@ async def restart(ctx, passwordinput: str):
 @bot.command()
 async def afk(ctx, mention: discord.Member=None):
     if mention is None:
-        await ctx.send(ctx.author.nick + " has gone AFK")
+        await ctx.send("**" + str(ctx.author) + " has gone AFK.**")
         await ctx.author.move_to(bot.get_channel(ctx.guild.afk_channel.id))
-        print(str(ctx.author) + " has gone AFK in the server " + ctx.guild.name)
-        log.write(str(ctx.author) + "  in the server " + ctx.guild.name + "\n")
-        log.flush()
     else:
-        await ctx.send(mention.nick + " has gone AFK")
+        await ctx.send("**" + str(mention) + " has gone AFK**")
         await mention.move_to(bot.get_channel(ctx.guild.afk_channel.id))
-        print(str(mention) + " has gone AFK in the server " + ctx.guild.name)
-        log.write(str(mention) + " has gone AFK in the server " + ctx.guild.name + "\n")
-        log.flush()
+    print("AFK command used in the server " + ctx.guild.name)
+    log.write("AFK command used in the server " + ctx.guild.name+ "\n")
+    log.flush()
 
 def imagecreation(nphotos: int, color: tuple, savename: str, cardrarity: list): #function to create an image
-    os.chdir("Images")
-    imagelist = os.listdir()
+    imagelist = os.listdir("Images")
     imagetodrop = random.choices(imagelist, weights=cardrarity, k=nphotos)
     images = [Image.open(x) for x in imagetodrop]
     widths, heights = zip(*(i.size for i in images))
@@ -432,6 +449,27 @@ def imagecreation(nphotos: int, color: tuple, savename: str, cardrarity: list): 
     os.chdir("..")
     new_im.save(savename)
     return imagetodrop
+
+def printproperties():
+    print("Properties of botdata.txt")
+    print("Password: " + str(password))
+    print("Bot token: " + token)
+    print("Bot Admin ID: " + str(botadminid))
+    print("Prefix: " + prefix)
+    print("Cardgame Flag: " + str(cardgame))
+    print("Bot name: " + botname)
+    print("Extension Flag: " + str(extension))
+    print("Updates Flag: " + str(updates))
+
+def loadextension(cogextension):
+    try:
+        bot.load_extension(cogextension)
+    except Exception as EXC:
+        print("Failed to load " + cogextension + ".py\n" + EXC)
+        log.write("Failed to load " + cogextension + ".py\n" + EXC)
+        return
+    print(cogextension + ".py loaded on the bot successfully")
+    log.write(cogextension + ".py loaded on the bot successfully")
 
 bot.run(token)
 
