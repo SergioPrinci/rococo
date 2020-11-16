@@ -4,3 +4,5 @@ adminid:
 prefix:
 cardgame:
 botname: 
+extension: 
+updates: 
