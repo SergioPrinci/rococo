@@ -12,10 +12,10 @@ from PIL import Image #image manipulation and creation
 
 '''declarations'''
 VERSION = "1,6" #version of the bot
-answersdrop = [line.strip() for line in open("Sources\\dropanswers.txt", "r", newline="\n")] #add string/strings with what the bot needs to say on a drop
-factlist = [line.strip() for line in open("Sources\\facts.txt", "r", newline="\n")] #add string/strings for facts
+answersdrop = [line.strip() for line in open("Sources/dropanswers.txt", "r", newline="\n")] #add string/strings with what the bot needs to say on a drop
+factlist = [line.strip() for line in open("Sources/facts.txt", "r", newline="\n")] #add string/strings for facts
 log = open("log.txt", "w", buffering=1, newline="\n", encoding="utf-8") #opens the log file
-botdata = open("Sources\\botdata.txt", "r", encoding="utf-8") #opens file with token, password and the id of the manager of the bot
+botdata = open("Sources/botdata.txt", "r", encoding="utf-8") #opens file with token, password and the id of the manager of the bot
 password: int = int(botdata.readline().replace("password: ", "")) #password for resets
 token: str = botdata.readline().replace("token: ", "").strip("\n") #discord bot token
 botadminid: int = int(botdata.readline().replace("adminid: ", "")) #bot manager
@@ -43,9 +43,9 @@ async def on_ready(): #when the bot connects to the server and it's ready
         loadextension("extension")
     print('\nConnected as ' + str(bot.user) + ' in ' + str(len(bot.guilds)) + ' servers (' + 'VERSION ' + VERSION + ')')
     for guild in bot.guilds:
-        mainchannel = discord.utils.get(guild.text_channels, name=botname)
+        mainchannel = discord.utils.get(guild.text_channels, name=botname.lower())
         if mainchannel is None:
-            channel = await guild.create_text_channel(botname)
+            channel = await guild.create_text_channel(botname.lower())
             mainchannel = bot.get_channel(channel.id)
         await mainchannel.send("**" + botname + "(rococò engine) is online!**")
     log.write("Bot started at " + str(datetime.datetime.now()) + "\n")
@@ -83,7 +83,7 @@ async def on_command_error(ctx, error):
 
 @bot.event
 async def on_guild_remove(guild):
-    serverroot = ET.parse("Sources\\ServerDatabase.xml", ET.XMLParser(remove_blank_text=True)).getroot()
+    serverroot = ET.parse("Sources/ServerDatabase.xml", ET.XMLParser(remove_blank_text=True)).getroot()
     serverbranch = serverroot.find("servers")
     for server in serverbranch.findall("server"):
         if server.attrib["ID"] == guild.id:
@@ -102,7 +102,7 @@ async def on_voice_state_update(member, before, after): #when a member has his v
 
 @bot.command(aliases = ['firstsetup', 'fs'])
 async def setup(ctx, mention: discord.Role):
-    serverroot = ET.parse("Sources\\ServerDatabase.xml", ET.XMLParser(remove_blank_text=True)).getroot()
+    serverroot = ET.parse("Sources/ServerDatabase.xml", ET.XMLParser(remove_blank_text=True)).getroot()
     serverbranch = serverroot.find("servers")
     start = time.time()
     serverbranch.attrib["nservers"] = str(int(serverbranch.attrib["nservers"])+1)
@@ -131,7 +131,7 @@ async def setup(ctx, mention: discord.Role):
         newserveradminroleid.text = str(mention.id)
         serverbranch.append(newserverbranch)
         newroot = ET.tostring(serverroot, encoding="UTF-8", pretty_print=True)
-        open("Sources\\ServerDatabase.xml", "wb").write(newroot)
+        open("Sources/ServerDatabase.xml", "wb").write(newroot)
         await ctx.send("Setup completed! Enjoy the bot!")
 
     print('Used successfully the command setup from "' + str(ctx.author) + '"(' + ctx.author.top_role.name + '), in the server ' + ctx.guild.name + ' in ' + str(round(time.time()-start, 2)) + ' seconds.') #console log
@@ -150,7 +150,7 @@ async def facts(ctx):
 @bot.command(aliases = ['D', 'd', 'drop'])
 async def dropcard(ctx): #cards dropping
     if cardgame: 
-        carddata = untangle.parse("Sources\\CardDatabase.xml")
+        carddata = untangle.parse("Sources/CardDatabase.xml")
         if carddata is not None: 
             cardrarity = [int(cards.rarityweight.cdata) for cards in carddata.root.card]
             print(cardrarity)
@@ -159,7 +159,7 @@ async def dropcard(ctx): #cards dropping
         foundFlag = False
         start = time.time() #starting timer
 
-        root = ET.parse("Sources\\UsersDatabase.xml", ET.XMLParser(remove_blank_text=True)).getroot()
+        root = ET.parse("Sources/UsersDatabase.xml", ET.XMLParser(remove_blank_text=True)).getroot()
         usersbranch = root.find("users")
         for users in usersbranch.findall("user"):
             if users.attrib["ID"] == str(ctx.author.id):
@@ -170,10 +170,10 @@ async def dropcard(ctx): #cards dropping
             dropFlag = True
         
         if dropFlag:
-            imagetodrop = imagecreation(3, GREY, "Temp\\tempdrop.png", cardrarity) #list of paths of images dropped for parsing database info
-            cardsdropped = [int(image.replace('.png', '').replace('Images\\', '')) for image in imagetodrop]
+            imagetodrop = imagecreation(3, GREY, "Temp/tempdrop.png", cardrarity) #list of paths of images dropped for parsing database info
+            cardsdropped = [int(image.replace('.png', '').replace('Images/', '')) for image in imagetodrop]
 
-            drop = await ctx.send(file=discord.File("Temp\\tempdrop.png"), content=ctx.author.mention + ' ' + random.choice(answersdrop)) #memorizing the Message class in drop for after
+            drop = await ctx.send(file=discord.File("Temp/tempdrop.png"), content=ctx.author.mention + ' ' + random.choice(answersdrop)) #memorizing the Message class in drop for after
             await drop.add_reaction('1️⃣') #adding reactions to the drop message
             await drop.add_reaction('2️⃣')
             await drop.add_reaction('3️⃣')
@@ -182,7 +182,7 @@ async def dropcard(ctx): #cards dropping
                 if users.attrib["ID"] == str(ctx.author.id):
                     users.find("lastdrop").text = str(round(time.time()))
                     newroot = ET.tostring(root, encoding="UTF-8", pretty_print=True)
-                    open("Sources\\UsersDatabase.xml", "wb").write(newroot)
+                    open("Sources/UsersDatabase.xml", "wb").write(newroot)
 
             print('Used successfully the command drop from "' + str(ctx.author) + '"(' + ctx.author.top_role.name + '), in the server ' + ctx.guild.name + ' in ' + str(round(time.time()-start, 2)) + ' seconds.') #console log
             log.write('Used successfully the command drop from "' + str(ctx.author) + '"(' + ctx.author.top_role.name + '), in the server ' + ctx.guild.name + ' in ' + str(round(time.time()-start, 2)) + ' seconds.\n')
@@ -226,7 +226,7 @@ async def dropcard(ctx): #cards dropping
                 newcardlist.text = str(cardsdropped[carddroppedindex])
                 usersbranch.append(newuserbranch)
             newroot = ET.tostring(root, encoding="UTF-8", pretty_print=True)
-            open("Sources\\UsersDatabase.xml", "wb").write(newroot)
+            open("Sources/UsersDatabase.xml", "wb").write(newroot)
         else:
             await ctx.send("You got to wait 5 minutes between drops!")
             print('Used successfully the command drop from "' + str(ctx.author) + '"(' + ctx.author.top_role.name + '), in the server ' + ctx.guild.name + ' in ' + str(round(time.time()-start, 2)) + ' seconds.') #console log
@@ -239,7 +239,7 @@ async def dropcard(ctx): #cards dropping
 async def cooldown(ctx):
     start = time.time()
     if cardgame:
-        userdata = untangle.parse("Sources\\UsersDatabase.xml")
+        userdata = untangle.parse("Sources/UsersDatabase.xml")
         useridlist = [int(elements["ID"]) for elements in userdata.root.users.user]
         if ctx.author.id in useridlist:
             for users in userdata.root.users.user:
@@ -259,7 +259,7 @@ async def cooldown(ctx):
 async def playgame(ctx, versus: discord.Member, turni: int=1): #playing the cards, default turns is 1
     if cardgame:
         start = time.time() #same timer to measure performance
-        carddata = untangle.parse("Sources\\CardDatabase.xml")
+        carddata = untangle.parse("Sources/CardDatabase.xml")
         if carddata is not None: cardrarity = [int(cards.rarityweight.cdata) for cards in carddata.root.card]
         if turni == 1: #only one turn
             os.chdir("Images") #changing directory for image search
@@ -289,8 +289,8 @@ async def playgame(ctx, versus: discord.Member, turni: int=1): #playing the card
                 await ctx.send('WTF just happened.')
         
         elif turni > 1 and turni < 6: #if the round quantity is over 1, this happens
-            cardstoplay1 = imagecreation(turni, RED, "Temp\\temp1.png", cardrarity)
-            cardstoplay2 = imagecreation(turni, RED, "Temp\\temp2.png", cardrarity)
+            cardstoplay1 = imagecreation(turni, RED, "Temp/temp1.png", cardrarity)
+            cardstoplay2 = imagecreation(turni, RED, "Temp/temp2.png", cardrarity)
             
             value1 = value2 = 0
 
@@ -304,8 +304,8 @@ async def playgame(ctx, versus: discord.Member, turni: int=1): #playing the card
                 value1 += int(carddata.root.card[int(cardplayed1)].cdata)
                 value2 += int(carddata.root.card[int(cardplayed2)].cdata)
 
-            await ctx.send(file=discord.File("Temp\\temp1.png"), content=firstplayer + ' , you played cards with a total value '+ str(value1)) #loading the cards in a message
-            await ctx.send(file=discord.File("Temp\\temp2.png"), content=secondplayer + ' , you played cards with a total value '+ str(value2))
+            await ctx.send(file=discord.File("Temp/temp1.png"), content=firstplayer + ' , you played cards with a total value '+ str(value1)) #loading the cards in a message
+            await ctx.send(file=discord.File("Temp/temp2.png"), content=secondplayer + ' , you played cards with a total value '+ str(value2))
 
             if value1 < value2:
                 await ctx.send('Congrats ' + secondplayer + ' !, You won!') #checking the winner
@@ -327,8 +327,8 @@ async def playgame(ctx, versus: discord.Member, turni: int=1): #playing the card
 async def collection(ctx, mention: discord.Member=None): #outputs the list of cards possessed by the user in a embed message
     if cardgame:
         start = time.time()
-        userdata = untangle.parse("Sources\\UsersDatabase.xml")
-        carddata = untangle.parse("Sources\\CardDatabase.xml")
+        userdata = untangle.parse("Sources/UsersDatabase.xml")
+        carddata = untangle.parse("Sources/CardDatabase.xml")
         useridlist = [elements["ID"] for elements in userdata.root.users.user]
         if mention is not None and str(mention.id) not in useridlist:
             await ctx.send("The user never took a card from the bot!")
@@ -360,7 +360,7 @@ async def collection(ctx, mention: discord.Member=None): #outputs the list of ca
 
 @bot.command(aliases = ['clearchat', 'cl'])
 async def clear(ctx, amount: int = 5): #command to clear the chat by amount
-    serverroot = ET.parse("Sources\\ServerDatabase.xml", ET.XMLParser(remove_blank_text=True)).getroot()
+    serverroot = ET.parse("Sources/ServerDatabase.xml", ET.XMLParser(remove_blank_text=True)).getroot()
     serverbranch = serverroot.find("servers")
     start = time.time()
     rolelist = [int(server.find("adminroleid").text) for server in serverbranch.findall("server")]
@@ -433,7 +433,7 @@ async def afk(ctx, mention: discord.Member=None):
     log.flush()
 
 def imagecreation(nphotos: int, color: tuple, savename: str, cardrarity: list): #function to create an image
-    imagelist = ["Images\\" + imagedir for imagedir in os.listdir("Images")]
+    imagelist = ["Images/" + imagedir for imagedir in os.listdir("Images")]
     imagetodrop = random.choices(imagelist, weights=cardrarity, k=nphotos)
     images = [Image.open(image) for image in imagetodrop]
     widths, heights = zip(*(i.size for i in images))
