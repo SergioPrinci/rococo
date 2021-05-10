@@ -492,7 +492,7 @@ def updater():
         if githubVersion > VERSION: 
             print("You have an outdated version. \nPlease update your rococo engine to enjoy the full capabilities of the bot")
         elif githubVersion == VERSION:
-            None
+            print("Your rococo engine versione is up-to-date")
         else:
             print("How the duck... do you have a time machine?")
     else:
