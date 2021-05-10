@@ -1,0 +1,6 @@
+untangle==1.1.1
+lxml==4.6.3
+discord.py==1.7.2
+requests==2.25.1
+discord==1.0.1
+Pillow==8.2.0
