@@ -9,9 +9,10 @@ import datetime #logging
 from distutils import util #transforming string in bool
 from discord.ext import commands #class of discord.py
 from PIL import Image #image manipulation and creation
+from sys import platform
 
 '''declarations'''
-VERSION = "1,6" #version of the bot
+VERSION = "1.6.3" #version of the bot
 answersdrop = [line.strip() for line in open(os.path.abspath("Sources/dropanswers.txt"), "r", newline="\n")] #add string/strings with what the bot needs to say on a drop
 factlist = [line.strip() for line in open(os.path.abspath("Sources/facts.txt"), "r", newline="\n")] #add string/strings for facts
 log = open("log.txt", "w", buffering=1, newline="\n", encoding="utf-8") #opens the log file
@@ -29,16 +30,21 @@ bot.remove_command('help') #removing default help command
 GREY = (70, 70, 70) #color grey in RGB
 RED = (200, 100, 100) #color red in RGB
 intents = discord.Intents(messages=True, guilds=True, members=True) #bot intents
+if platform == "linux" or platform == "linux2":
+    syscalls = {"clear" : "clear"}
+elif platform == "win32":
+    syscalls = {"clear" : "cls"}
+
 
 '''events'''
 @bot.event
 async def on_ready(): #when the bot connects to the server and it's ready
     global mainchannel
     await bot.user.edit(username=botname)
-    os.system("cls")
-    os.system("color 0a")
+    os.system(syscalls["clear"])
     print("Server running on " + str(os.cpu_count()) + "cores")
     printproperties()
+    checkForFillers()
     if extension:
         loadextension("extension")
     print('\nConnected as ' + str(bot.user) + ' in ' + str(len(bot.guilds)) + ' servers (' + 'VERSION ' + VERSION + ')')
@@ -153,8 +159,6 @@ async def dropcard(ctx): #cards dropping
         carddata = untangle.parse(os.path.abspath("Sources/CardDatabase.xml"))
         if carddata is not None: 
             cardrarity = [int(cards.rarityweight.cdata) for cards in carddata.root.card]
-            print(cardrarity)
-            print(type(cardrarity))
         dropFlag = False
         foundFlag = False
         start = time.time() #starting timer
@@ -468,6 +472,13 @@ def loadextension(cogextension):
         return
     print(cogextension + ".py loaded on the bot successfully")
     log.write(cogextension + ".py loaded on the bot successfully")
+
+def checkForFillers():
+    if os.path.exists(os.path.abspath("Images/filler")):
+        os.remove(os.path.abspath("Images/filler"))
+    if os.path.exists(os.path.abspath("Temp/filler")):
+        os.remove(os.path.abspath("Temp/filler"))
+    print("If fillers were present, now they've been removed.")
 
 bot.run(token)
 
