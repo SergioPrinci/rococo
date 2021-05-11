@@ -330,6 +330,20 @@ async def playgame(ctx, versus: discord.Member, turni: int=1): #playing the card
     else:
         await ctx.send("Tell the bot admin to add the function by botdata.txt!")
 
+@bot.command(aliases = ['V', 'v', 'view'])
+async def viewcard(ctx, id : int): #cards viewing
+    #special thanks to MiMoZz#4686 and his friends for this one
+    if id != None:
+        try:
+            if id >= 1 and id <= cardLength():
+                await ctx.send(file=discord.File(os.path.abspath("Images/" + str(id) + ".png")))
+            else:
+                await ctx.send("Please, choose an id that's between 1 and the number of cards.")
+            return
+        except ValueError:
+            pass
+    help()
+
 @bot.command(aliases = ['col'])
 async def collection(ctx, mention: discord.Member=None): #outputs the list of cards possessed by the user in a embed message
     if cardgame:
@@ -384,6 +398,7 @@ async def help(ctx): #command for help
     embed.add_field(name = prefix + "setup", value="Starts the setup for the essentials functions of the bot -Syntax: " + prefix + "setup rolemention", inline=False)
     embed.add_field(name = prefix + "drop(alias "+ prefix + "d)", value="Drops 3 casual cards -Syntax: " + prefix + "drop", inline=False)
     embed.add_field(name = prefix + "play(alias "+ prefix + "p)", value="Card game based on cards value -Syntax: " + prefix + "play mention rounds(default 1, max 5)", inline=False)
+    embed.add_field(name = prefix + "view(alias "+ prefix + "v)", value="Shows the card that corresponds to the id -Syntax: " + prefix + "view cardid", inline=False)
     embed.add_field(name = prefix + "clear(alias "+ prefix + "c)", value="Clears the chat by n times -Syntax: " + prefix + "clear numberofmessages(default 5)", inline=False)
     embed.add_field(name = prefix + "help(alias "+ prefix + "h)", value="Shows this page -Syntax: " + prefix + "help", inline=False)
     embed.add_field(name = prefix + "collection(alias "+ prefix + "col)", value="Outputs the card possessed by the user -Syntax: " + prefix + "collection mention", inline=False)
@@ -438,6 +453,10 @@ async def afk(ctx, mention: discord.Member=None):
     print("AFK command used in the server " + ctx.guild.name)
     log.write("AFK command used in the server " + ctx.guild.name+ "\n")
     log.flush()
+
+def cardLength():
+    path, dirs, files = next(os.walk("Images/"))
+    return len(files)
 
 def imagecreation(nphotos: int, color: tuple, savename: str, cardrarity: list): #function to create an image
     imagelist = ["Images/" + imagedir for imagedir in os.listdir("Images")]
@@ -498,4 +517,3 @@ def updater():
     else:
         print("Failed to retrieve last version number from GitHub.")
 bot.run(token)
-
