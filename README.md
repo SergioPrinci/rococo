@@ -1,4 +1,7 @@
 # rococo
+
+BOT IS BROKEN AF AND A BIT DISCONTINUED, SORRY IF I DONT ANSWER TO YOUR ISSUES
+
 A discord.py bot, open-source alternative to Karuta
 
 This is an open-source discord.py alternative to Karuta Bot, which is a great bot for fun on discord groups.
