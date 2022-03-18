@@ -12,7 +12,7 @@ from PIL import Image #image manipulation and creation
 from sys import platform
 
 '''declarations'''
-VERSION = 1.8 #version of the bot
+VERSION = 1.0 #version of the bot
 answersdrop = [line.strip() for line in open(os.path.abspath("Sources/dropanswers.txt"), "r", newline="\n")] #add string/strings with what the bot needs to say on a drop
 factlist = [line.strip() for line in open(os.path.abspath("Sources/facts.txt"), "r", newline="\n")] #add string/strings for facts
 log = open("log.txt", "w", buffering=1, newline="\n", encoding="utf-8") #opens the log file
