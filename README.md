@@ -1,19 +1,17 @@
 # rococo
 
-BOT IS BROKEN AF AND A BIT DISCONTINUED, SORRY IF I DONT ANSWER TO YOUR ISSUES
-
 A discord.py bot, open-source alternative to Karuta
+
+Now with SQL databases for better and faster management
 
 This is an open-source discord.py alternative to Karuta Bot, which is a great bot for fun on discord groups.
 Setup is pretty simple: 
 
 -Download the ZIP and decompress it
 
--Install with pip the modules lxml, untangle, discord and pillow
+-Install with pip the modules discord, pillow and sqlite3
 
--Go to sources and write into botdata.txt token(the bot one), password(must be a number), member ID(with developer mode), prefix, cardgame(it's a bool so True or False with T/F capital), botname.
-
--Add facts, personalized answers to drops or cards with the card creator!
+-Add cards to the images folder and add them manually to the SQL database (I will develop a way to add them automatically to the database in the future)
 
 -Run the bot before making it join the guild via the discord developer portal link
 
