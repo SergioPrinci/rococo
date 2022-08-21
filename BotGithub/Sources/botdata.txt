@@ -1,8 +1,0 @@
-password: 
-token: 
-adminid: 
-prefix:
-cardgame:
-botname: 
-extension: 
-updates: 
