@@ -1,6 +1,6 @@
 # rococo
 
-<h1>A discord.py bot, open-source alternative to Karuta<h1>
+<h1>A discord.py bot, open-source alternative to Karuta</h1>
 
 _Now with SQL databases for better and faster management_
 
