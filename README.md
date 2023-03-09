@@ -1,20 +1,20 @@
 # rococo
 
-A discord.py bot, open-source alternative to Karuta
+<h1>A discord.py bot, open-source alternative to Karuta<h1>
 
-Now with SQL databases for better and faster management
+_Now with SQL databases for better and faster management_
 
-This is an open-source discord.py alternative to Karuta Bot, which is a great bot for fun on discord groups.
-Setup is pretty simple: 
+<p>This is an open-source discord.py alternative to Karuta Bot, which is a great bot for fun on discord groups.<p>
+<p>Setup is pretty simple:
+<ul>
+  <li>Download the ZIP and decompress it</li>
 
--Download the ZIP and decompress it
+  <li>Install with pip the modules discord, pillow and sqlite3</li>
 
--Install with pip the modules discord, pillow and sqlite3
+  <li>Add cards to the images folder and add them manually to the SQL database (I will develop a way to add them automatically to the database in the future)</li>
 
--Add cards to the images folder and add them manually to the SQL database (I will develop a way to add them automatically to the database in the future)
+  <li>Run the bot before making it join the guild via the discord developer portal link</li>
 
--Run the bot before making it join the guild via the discord developer portal link
-
--Enjoy!
-
+  <li>Enjoy!</li>
+</ul>
 For every problem, or tip, tell me, I will be happy to help/answer!
