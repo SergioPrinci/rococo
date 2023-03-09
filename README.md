@@ -5,7 +5,8 @@
 _Now with SQL databases for better and faster management_
 
 <p>This is an open-source discord.py alternative to Karuta Bot, which is a great bot for fun on discord groups.<p>
-<p>Setup is pretty simple:
+<p>Setup is pretty simple:</p>
+  
 <ul>
   <li>Download the ZIP and decompress it</li>
 
@@ -17,4 +18,3 @@ _Now with SQL databases for better and faster management_
 
   <li>Enjoy!</li>
 </ul>
-For every problem, or tip, tell me, I will be happy to help/answer!
